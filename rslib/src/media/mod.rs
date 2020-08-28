@@ -4,8 +4,10 @@
 use crate::err::Result;
 use crate::media::database::{open_or_create, MediaDatabaseContext, MediaEntry};
 use crate::media::files::{add_data_to_folder_uniquely, mtime_as_i64, remove_files, sha1_of_data};
+#[cfg(feature = "SYNC")]
 use crate::media::sync::{MediaSyncProgress, MediaSyncer};
 use rusqlite::Connection;
+#[cfg(feature = "SYNC")]
 use slog::Logger;
 use std::borrow::Cow;
 use std::path::{Path, PathBuf};
@@ -127,6 +129,7 @@ impl MediaManager {
     }
 
     /// Sync media.
+    #[cfg(feature = "SYNC")]
     pub async fn sync_media<'a, F>(
         &'a self,
         progress: F,

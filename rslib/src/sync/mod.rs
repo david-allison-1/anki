@@ -17,17 +17,24 @@ use crate::{
     tags::{join_tags, split_tags},
     version::sync_client_version,
 };
+#[cfg(feature = "SYNC")]
 use flate2::write::GzEncoder;
+#[cfg(feature = "SYNC")]
 use flate2::Compression;
+#[cfg(feature = "SYNC")]
 use futures::StreamExt;
+#[cfg(feature = "SYNC")]
 use http_client::HTTPSyncClient;
 use itertools::Itertools;
+#[cfg(feature = "SYNC")]
 use reqwest::{multipart, Client, Response};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use serde_json::Value;
 use serde_tuple::Serialize_tuple;
+#[cfg(feature = "SYNC")]
 use std::io::prelude::*;
 use std::{collections::HashMap, path::Path, time::Duration};
+#[cfg(feature = "SYNC")]
 use tempfile::NamedTempFile;
 
 #[derive(Default, Debug, Clone, Copy)]
@@ -231,7 +238,7 @@ pub struct SyncAuth {
     pub hkey: String,
     pub host_number: u32,
 }
-
+#[cfg(feature = "SYNC")]
 struct NormalSyncer<'a, F> {
     col: &'a mut Collection,
     remote: HTTPSyncClient,
@@ -257,7 +264,7 @@ impl Usn {
         }
     }
 }
-
+#[cfg(feature = "SYNC")]
 impl SyncMeta {
     fn compared_to_remote(&self, remote: SyncMeta) -> SyncState {
         let local = self;
@@ -286,7 +293,7 @@ impl SyncMeta {
         }
     }
 }
-
+#[cfg(feature = "SYNC")]
 impl<F> NormalSyncer<'_, F>
 where
     F: FnMut(NormalSyncProgress, bool),
@@ -581,7 +588,7 @@ impl Graves {
         }
     }
 }
-
+#[cfg(feature = "SYNC")]
 pub async fn sync_login(username: &str, password: &str) -> Result<SyncAuth> {
     let mut remote = HTTPSyncClient::new(None, 0);
     remote.login(username, password).await?;
@@ -590,17 +597,18 @@ pub async fn sync_login(username: &str, password: &str) -> Result<SyncAuth> {
         host_number: 0,
     })
 }
-
+#[cfg(feature = "SYNC")]
 pub async fn sync_abort(hkey: String, host_number: u32) -> Result<()> {
     let remote = HTTPSyncClient::new(Some(hkey), host_number);
     remote.abort().await
 }
-
+#[cfg(feature = "SYNC")]
 pub(crate) async fn get_remote_sync_meta(auth: SyncAuth) -> Result<SyncMeta> {
     let remote = HTTPSyncClient::new(Some(auth.hkey), auth.host_number);
     remote.meta().await
 }
 
+#[cfg(feature = "SYNC")]
 impl Collection {
     pub fn get_local_sync_status(&mut self) -> Result<sync_status_out::Required> {
         let last_sync = self.storage.get_last_sync()?;
@@ -1168,7 +1176,7 @@ impl From<SyncActionRequired> for sync_status_out::Required {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "SYNC"))]
 mod test {
     use super::*;
     use crate::log;

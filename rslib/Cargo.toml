@@ -7,6 +7,9 @@ license = "AGPL-3.0-or-later"
 description = "Anki's Rust library code"
 readme = "README.md"
 
+[features]
+SYNC = ["reqwest"]
+
 [dependencies]
 # pinned as any changes could invalidate sqlite indexes
 unicase = "=2.6.0"
@@ -62,10 +65,10 @@ version = "0.23.1"
 features = ["trace", "functions", "collation", "bundled"]
 
 [target.'cfg(linux)'.dependencies]
-reqwest = { version = "0.10.6", features = ["json", "socks", "stream", "native-tls-vendored"] }
+reqwest = { version = "0.10.6", features = ["json", "socks", "stream", "native-tls-vendored"], optional = true }
 
 [target.'cfg(not(linux))'.dependencies]
-reqwest = { version = "0.10.6", features = ["json", "socks", "stream" ] }
+reqwest = { version = "0.10.6", features = ["json", "socks", "stream" ], optional = true }
 
 [build-dependencies]
 prost-build = "0.6.1"
