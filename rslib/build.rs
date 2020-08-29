@@ -217,7 +217,7 @@ fn main() -> std::io::Result<()> {
     assert!(rustfmt.success(), "rustfmt backend_proto.rs failed");
 
     // write the other language ftl files
-    let mut ftl_lang_dirs = vec!["./ftl/repo/core".to_string()];
+    let mut ftl_lang_dirs = vec!["./ftl/anki-core-i18n/core".to_string()];
     if let Ok(paths) = std::env::var("FTL_LOCALE_DIRS") {
         ftl_lang_dirs.extend(paths.split(',').map(|s| s.to_string()));
     }

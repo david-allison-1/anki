@@ -1,0 +1,3 @@
+[submodule "rslib/ftl/anki-core-i18n"]
+	path = rslib/ftl/anki-core-i18n
+	url = https://github.com/ankitects/anki-core-i18n
