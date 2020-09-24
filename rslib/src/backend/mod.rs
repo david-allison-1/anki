@@ -92,8 +92,8 @@ struct ProgressState {
 type AbortHandleSlot = Arc<Mutex<Option<AbortHandle>>>;
 
 pub struct Backend {
-    col: Arc<Mutex<Option<Collection>>>,
-    i18n: I18n,
+    pub col: Arc<Mutex<Option<Collection>>>,
+    pub i18n: I18n,
     server: bool,
     sync_abort: AbortHandleSlot,
     progress_state: Arc<Mutex<ProgressState>>,
@@ -135,7 +135,7 @@ enum Progress {
 }
 
 /// Convert an Anki error to a protobuf error.
-fn anki_error_to_proto_error(err: AnkiError, i18n: &I18n) -> pb::BackendError {
+pub fn anki_error_to_proto_error(err: AnkiError, i18n: &I18n) -> pb::BackendError {
     use pb::backend_error::Value as V;
     let localized = err.localized_description(i18n);
     let value = match err {

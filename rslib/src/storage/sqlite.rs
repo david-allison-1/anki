@@ -26,10 +26,10 @@ fn unicase_compare(s1: &str, s2: &str) -> Ordering {
 #[derive(Debug)]
 pub struct SqliteStorage {
     // currently crate-visible for dbproxy
-    pub(crate) db: Connection,
+    pub db: Connection,
 }
 
-fn open_or_create_collection_db(path: &Path) -> Result<Connection> {
+pub fn open_or_create_collection_db(path: &Path) -> Result<Connection> {
     let mut db = Connection::open(path)?;
 
     if std::env::var("TRACESQL").is_ok() {
@@ -118,7 +118,7 @@ fn add_regexp_function(db: &Connection) -> rusqlite::Result<()> {
 
 /// Fetch schema version from database.
 /// Return (must_create, version)
-fn schema_version(db: &Connection) -> Result<(bool, u8)> {
+pub fn schema_version(db: &Connection) -> Result<(bool, u8)> {
     if !db
         .prepare("select null from sqlite_master where type = 'table' and name = 'col'")?
         .exists(NO_PARAMS)?

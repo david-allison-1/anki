@@ -53,15 +53,15 @@ pub struct CollectionState {
 }
 
 pub struct Collection {
-    pub(crate) storage: SqliteStorage,
+    pub storage: SqliteStorage,
     #[allow(dead_code)]
-    pub(crate) col_path: PathBuf,
-    pub(crate) media_folder: PathBuf,
-    pub(crate) media_db: PathBuf,
-    pub(crate) i18n: I18n,
-    pub(crate) log: Logger,
-    pub(crate) server: bool,
-    pub(crate) state: CollectionState,
+    pub col_path: PathBuf,
+    pub media_folder: PathBuf,
+    pub media_db: PathBuf,
+    pub i18n: I18n,
+    pub log: Logger,
+    pub server: bool,
+    pub state: CollectionState,
 }
 
 #[derive(Debug, Clone, PartialEq)]

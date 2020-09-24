@@ -9,13 +9,13 @@ mod graves;
 mod note;
 mod notetype;
 mod revlog;
-mod sqlite;
+pub mod sqlite;
 mod sync;
 mod sync_check;
 mod tag;
 mod upgrades;
 
-pub(crate) use sqlite::SqliteStorage;
+pub use sqlite::SqliteStorage;
 
 use std::fmt::Write;
 
