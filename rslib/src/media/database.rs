@@ -11,7 +11,7 @@ fn trace(s: &str) {
     println!("sql: {}", s)
 }
 
-pub(super) fn open_or_create<P: AsRef<Path>>(path: P) -> Result<Connection> {
+pub fn open_or_create<P: AsRef<Path>>(path: P) -> Result<Connection> {
     let mut db = Connection::open(path)?;
 
     if std::env::var("TRACESQL").is_ok() {

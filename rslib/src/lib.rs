@@ -4,7 +4,7 @@
 #![deny(unused_must_use)]
 
 pub mod backend;
-mod backend_proto;
+pub mod backend_proto;
 pub mod card;
 pub mod cloze;
 pub mod collection;
