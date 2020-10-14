@@ -12,7 +12,7 @@ use serde_json::json;
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use slog::warn;
 
-pub(crate) fn schema11_config_as_string() -> String {
+pub fn schema11_config_as_string() -> String {
     let obj = json!({
         "activeDecks": [1],
         "curDeck": 1,
