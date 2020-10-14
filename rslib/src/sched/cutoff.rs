@@ -87,7 +87,7 @@ pub(crate) fn v1_rollover_from_creation_stamp(crt: i64) -> u8 {
     Local.timestamp(crt, 0).hour() as u8
 }
 
-pub(crate) fn v1_creation_date() -> i64 {
+pub fn v1_creation_date() -> i64 {
     let now = TimestampSecs::now();
     v1_creation_date_inner(now, local_minutes_west_for_stamp(now.0))
 }

@@ -215,7 +215,7 @@ impl SqliteStorage {
         Ok(())
     }
 
-    pub(crate) fn commit_trx(&self) -> Result<()> {
+    pub fn commit_trx(&self) -> Result<()> {
         if !self.db.is_autocommit() {
             self.db.prepare_cached("commit")?.execute(NO_PARAMS)?;
         }

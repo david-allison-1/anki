@@ -33,7 +33,7 @@ pub(super) enum DBResult {
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(untagged)]
-pub(super) enum SqlValue {
+pub enum SqlValue {
     Null,
     String(String),
     Int(i64),
