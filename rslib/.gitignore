@@ -1,4 +1,5 @@
 Cargo.lock
 src/backend_proto.rs
 .build
+.idea/
 target
