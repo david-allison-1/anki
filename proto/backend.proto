@@ -465,6 +465,7 @@ message BackendError {
         Empty not_found_error = 11;
         Empty exists = 12;
         Empty deck_is_filtered = 13;
+        string fatal_error = 14;
     }
 }
 

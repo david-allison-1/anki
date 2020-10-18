@@ -61,6 +61,9 @@ pub enum AnkiError {
 
     #[fail(display = "Invalid search.")]
     SearchError(Option<String>),
+
+    #[fail(display = "Fatal error.")]
+    FatalError { info: String },
 }
 
 // error helpers

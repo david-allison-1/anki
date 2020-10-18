@@ -5,6 +5,7 @@
 .*.swp
 .build
 .coverage
+.idea/
 .DS_Store
 dist
 pyenv

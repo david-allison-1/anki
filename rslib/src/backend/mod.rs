@@ -152,6 +152,7 @@ pub fn anki_error_to_proto_error(err: AnkiError, i18n: &I18n) -> pb::BackendErro
         AnkiError::DeckIsFiltered => V::DeckIsFiltered(Empty {}),
         AnkiError::SearchError(_) => V::InvalidInput(pb::Empty {}),
         AnkiError::TemplateSaveError { .. } => V::TemplateParse(pb::Empty {}),
+        AnkiError::FatalError { info } => V::FatalError(info),
     };
 
     pb::BackendError {
