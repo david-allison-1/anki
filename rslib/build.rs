@@ -203,11 +203,12 @@ fn main() -> std::io::Result<()> {
     // we avoid default OUT_DIR for now, as it breaks code completion
     std::env::set_var("OUT_DIR", "src");
     println!("cargo:rerun-if-changed=../proto/backend.proto");
+    println!("cargo:rerun-if-changed=../proto/sqlite.proto");
 
     let mut config = prost_build::Config::new();
     config.service_generator(service_generator());
     config
-        .compile_protos(&["../proto/backend.proto"], &["../proto"])
+        .compile_protos(&["../proto/backend.proto", "../proto/sqlite.proto"], &["../proto"])
         .unwrap();
 
     // write the other language ftl files

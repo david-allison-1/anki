@@ -1,6 +1,8 @@
 // Copyright: Ankitects Pty Ltd and contributors
 // License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
+use crate::backend_proto::{DbResult, Row, SqlValue as pb_SqlValue, sql_value::Data};
+use crate::backend_proto;
 use crate::err::Result;
 use crate::storage::SqliteStorage;
 use rusqlite::types::{FromSql, FromSqlError, ToSql, ToSqlOutput, ValueRef};
@@ -26,7 +28,7 @@ pub(super) enum DBRequest {
 
 #[derive(Serialize)]
 #[serde(untagged)]
-pub(super) enum DBResult {
+pub enum DBResult {
     Rows(Vec<Vec<SqlValue>>),
     None,
 }
@@ -51,6 +53,30 @@ impl ToSql for SqlValue {
             SqlValue::Blob(v) => ValueRef::Blob(&v),
         };
         Ok(ToSqlOutput::Borrowed(val))
+    }
+}
+
+impl From<&SqlValue> for backend_proto::SqlValue {
+    fn from(item: &SqlValue) -> Self {
+        match item {
+            SqlValue::Null => pb_SqlValue { data: Option::None },
+            SqlValue::String(s) => pb_SqlValue { data: Some(Data::StringValue(s.to_string())) },
+            SqlValue::Int(i) => pb_SqlValue { data: Some(Data::LongValue(*i)) },
+            SqlValue::Double(d) => pb_SqlValue { data: Some(Data::DoubleValue(*d)) },
+            SqlValue::Blob(b) => pb_SqlValue { data: Some(Data::BlobValue(b.clone())) },
+        }
+    }
+}
+
+impl From<&Vec<SqlValue>> for backend_proto::Row {
+    fn from(item: &Vec<SqlValue>) -> Self {
+        Row { fields : item.iter().map(|y| backend_proto::SqlValue::from(y)).collect() }
+    }
+}
+
+impl From<&Vec<Vec<SqlValue>>> for backend_proto::DbResult {
+    fn from(item: &Vec<Vec<SqlValue>>) -> Self {
+        DbResult { rows: item.iter().map(|x| Row::from(x)).collect() }
     }
 }
 
@@ -96,6 +122,41 @@ pub(super) fn db_command_bytes(ctx: &SqliteStorage, input: &[u8]) -> Result<Vec<
         DBRequest::ExecuteMany { sql, args } => db_execute_many(ctx, &sql, &args)?,
     };
     Ok(serde_json::to_vec(&resp)?)
+}
+
+pub(super) fn db_command_proto(ctx: &SqliteStorage, input: &[u8]) -> Result<DbResult> {
+    let req: DBRequest = serde_json::from_slice(input)?;
+    let resp = match req {
+        DBRequest::Query {
+            sql,
+            args,
+            first_row_only,
+        } => {
+            if first_row_only {
+                db_query_row(ctx, &sql, &args)?
+            } else {
+                db_query(ctx, &sql, &args)?
+            }
+        }
+        DBRequest::Begin => {
+            ctx.begin_trx()?;
+            DBResult::None
+        }
+        DBRequest::Commit => {
+            ctx.commit_trx()?;
+            DBResult::None
+        }
+        DBRequest::Rollback => {
+            ctx.rollback_trx()?;
+            DBResult::None
+        }
+        DBRequest::ExecuteMany { sql, args } => db_execute_many(ctx, &sql, &args)?,
+    };
+    let proto_resp = match resp {
+        DBResult::None => DbResult { rows: Vec::new() },
+        DBResult::Rows(rows) => DbResult::from(&rows)
+    };
+    Ok(proto_resp)
 }
 
 pub(super) fn db_query_row(ctx: &SqliteStorage, sql: &str, args: &[SqlValue]) -> Result<DBResult> {
