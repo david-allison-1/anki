@@ -3,6 +3,7 @@
 
 use crate::i18n::{tr_args, tr_strs, I18n, TR};
 pub use failure::{Error, Fail};
+#[cfg(feature = "SYNC")]
 use reqwest::StatusCode;
 use std::io;
 
@@ -67,7 +68,7 @@ impl AnkiError {
     pub(crate) fn invalid_input<S: Into<String>>(s: S) -> AnkiError {
         AnkiError::InvalidInput { info: s.into() }
     }
-
+    #[cfg(feature = "SYNC")]
     pub(crate) fn server_message<S: Into<String>>(msg: S) -> AnkiError {
         AnkiError::SyncError {
             info: msg.into(),
@@ -190,6 +191,7 @@ pub enum NetworkErrorKind {
     Other,
 }
 
+#[cfg(feature = "SYNC")]
 impl From<reqwest::Error> for AnkiError {
     fn from(err: reqwest::Error) -> Self {
         let url = err.url().map(|url| url.as_str()).unwrap_or("");
@@ -223,6 +225,7 @@ pub enum SyncErrorKind {
     DatabaseCheckRequired,
 }
 
+#[cfg(feature = "SYNC")]
 fn error_for_status_code(info: String, code: StatusCode) -> AnkiError {
     use reqwest::StatusCode as S;
     match code {
@@ -254,7 +257,7 @@ fn error_for_status_code(info: String, code: StatusCode) -> AnkiError {
         },
     }
 }
-
+#[cfg(feature = "SYNC")]
 fn guess_reqwest_error(mut info: String) -> AnkiError {
     if info.contains("dns error: cancelled") {
         return AnkiError::Interrupted;

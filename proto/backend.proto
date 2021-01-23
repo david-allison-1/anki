@@ -4,6 +4,8 @@ import "fluent.proto";
 
 package BackendProto;
 
+option java_generic_services = true;
+
 // Generic containers
 ///////////////////////////////////////////////////////////
 
@@ -169,15 +171,15 @@ service BackendService {
 
     // sync
 
-    rpc SyncMedia (SyncAuth) returns (Empty);
-    rpc AbortSync (Empty) returns (Empty);
-    rpc AbortMediaSync (Empty) returns (Empty);
+    // rpc SyncMedia (SyncAuth) returns (Empty);
+    // rpc AbortSync (Empty) returns (Empty);
+    // rpc AbortMediaSync (Empty) returns (Empty);
     rpc BeforeUpload (Empty) returns (Empty);
-    rpc SyncLogin (SyncLoginIn) returns (SyncAuth);
-    rpc SyncStatus (SyncAuth) returns (SyncStatusOut);
-    rpc SyncCollection (SyncAuth) returns (SyncCollectionOut);
-    rpc FullUpload (SyncAuth) returns (Empty);
-    rpc FullDownload (SyncAuth) returns (Empty);
+    // rpc SyncLogin (SyncLoginIn) returns (SyncAuth);
+    // rpc SyncStatus (SyncAuth) returns (SyncStatusOut);
+    // rpc SyncCollection (SyncAuth) returns (SyncCollectionOut);
+    // rpc FullUpload (SyncAuth) returns (Empty);
+    // rpc FullDownload (SyncAuth) returns (Empty);
 
     // translation/messages
 

@@ -2,14 +2,17 @@
 // License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 use crate::err::{AnkiError, Result, SyncErrorKind};
+#[cfg(feature = "SYNC")]
 use crate::media::changetracker::ChangeTracker;
 use crate::media::database::{MediaDatabaseContext, MediaDatabaseMetadata, MediaEntry};
 use crate::media::files::{
     add_file_from_ankiweb, data_for_file, mtime_as_i64, normalize_filename, AddedFile,
 };
+#[cfg(feature = "SYNC")]
 use crate::media::MediaManager;
 use crate::{sync::Timeouts, version};
 use bytes::Bytes;
+#[cfg(feature = "SYNC")]
 use reqwest::{multipart, Client, Response};
 use serde_derive::{Deserialize, Serialize};
 use serde_tuple::Serialize_tuple;
@@ -19,7 +22,9 @@ use std::collections::HashMap;
 use std::io::{Read, Write};
 use std::path::Path;
 use std::{io, time};
+#[cfg(feature = "SYNC")]
 use time::Duration;
+#[cfg(feature = "SYNC")]
 use version::sync_client_version;
 
 static SYNC_MAX_FILES: usize = 25;
@@ -35,6 +40,7 @@ pub struct MediaSyncProgress {
     pub uploaded_deletions: usize,
 }
 
+#[cfg(feature = "SYNC")]
 pub struct MediaSyncer<'a, P>
 where
     P: FnMut(MediaSyncProgress) -> bool,
@@ -144,7 +150,7 @@ fn media_sync_endpoint(host_number: u32) -> String {
         format!("https://sync{}.ankiweb.net/msync/", suffix)
     }
 }
-
+#[cfg(feature = "SYNC")]
 impl<P> MediaSyncer<'_, P>
 where
     P: FnMut(MediaSyncProgress) -> bool,
@@ -539,6 +545,7 @@ fn determine_required_changes<'a>(
     Ok((to_download, to_delete, to_remove_pending))
 }
 
+#[cfg(feature = "SYNC")]
 async fn ankiweb_json_request<T>(
     client: &Client,
     url: &str,
@@ -554,6 +561,7 @@ where
     ankiweb_request(client, url, part, skey, timeout_long).await
 }
 
+#[cfg(feature = "SYNC")]
 async fn ankiweb_bytes_request(
     client: &Client,
     url: &str,
@@ -565,6 +573,7 @@ async fn ankiweb_bytes_request(
     ankiweb_request(client, url, part, skey, timeout_long).await
 }
 
+#[cfg(feature = "SYNC")]
 async fn ankiweb_request(
     client: &Client,
     url: &str,
@@ -806,7 +815,7 @@ fn zip_files<'a>(
     Ok(Some(w.into_inner()))
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "SYNC"))]
 mod test {
     use crate::err::Result;
     use crate::media::sync::{

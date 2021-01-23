@@ -7,6 +7,9 @@ license = "AGPL-3.0-or-later"
 description = "Anki's Rust library code"
 readme = "README.md"
 
+[features]
+SYNC = ["reqwest"]
+
 [dependencies]
 # pinned as any changes could invalidate sqlite indexes
 unicase = "=2.6.0"
@@ -67,11 +70,13 @@ features = ["trace", "functions", "collation", "bundled"]
 git = "https://github.com/ankitects/reqwest.git"
 rev = "57665e2c2a39db85723ba860f1b570a608bb73f9"
 features = ["json", "socks", "stream", "native-tls-vendored"]
+optional = true
 
 [target.'cfg(not(linux))'.dependencies.reqwest]
 git = "https://github.com/ankitects/reqwest.git"
 rev = "57665e2c2a39db85723ba860f1b570a608bb73f9"
 features = ["json", "socks", "stream"]
+optional = true
 
 [build-dependencies]
 prost-build = "0.6.1"

@@ -4,12 +4,13 @@
 use super::*;
 use bytes::Bytes;
 use futures::Stream;
+#[cfg(feature = "SYNC")]
 use reqwest::Body;
 
 // fixme: 100mb limit
 
 static SYNC_VERSION: u8 = 10;
-
+#[cfg(feature = "SYNC")]
 pub struct HTTPSyncClient {
     hkey: Option<String>,
     skey: String,
@@ -96,7 +97,7 @@ impl Timeouts {
 }
 #[derive(Serialize)]
 struct Empty {}
-
+#[cfg(feature = "SYNC")]
 impl HTTPSyncClient {
     pub fn new(hkey: Option<String>, host_number: u32) -> HTTPSyncClient {
         let timeouts = Timeouts::new();
@@ -140,7 +141,7 @@ impl HTTPSyncClient {
             .await
             .map_err(Into::into)
     }
-
+    #[cfg(feature = "SYNC")]
     async fn request(
         &self,
         method: &str,
@@ -242,7 +243,7 @@ impl HTTPSyncClient {
         resp.error_for_status()?;
         Ok(())
     }
-
+    #[cfg(feature = "SYNC")]
     async fn download_inner(
         &self,
     ) -> Result<(
@@ -373,7 +374,7 @@ fn sync_endpoint(host_number: u32) -> String {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "SYNC"))]
 mod test {
     use super::*;
     use crate::err::SyncErrorKind;

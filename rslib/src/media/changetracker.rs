@@ -1,24 +1,30 @@
 // Copyright: Ankitects Pty Ltd and contributors
 // License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
+#[cfg(feature = "SYNC")]
 use crate::err::{AnkiError, Result};
+#[cfg(feature = "SYNC")]
 use crate::log::{debug, Logger};
+#[cfg(feature = "SYNC")]
 use crate::media::database::{MediaDatabaseContext, MediaEntry};
+#[cfg(feature = "SYNC")]
 use crate::media::files::{
     filename_if_normalized, mtime_as_i64, sha1_of_file, MEDIA_SYNC_FILESIZE_LIMIT,
     NONSYNCABLE_FILENAME,
 };
 use std::collections::HashMap;
+#[cfg(feature = "SYNC")]
 use std::path::Path;
+#[cfg(feature = "SYNC")]
 use std::time;
-
+#[cfg(feature = "SYNC")]
 struct FilesystemEntry {
     fname: String,
     sha1: Option<[u8; 20]>,
     mtime: i64,
     is_new: bool,
 }
-
+#[cfg(feature = "SYNC")]
 pub(super) struct ChangeTracker<'a, F>
 where
     F: FnMut(usize) -> bool,
@@ -28,7 +34,7 @@ where
     checked: usize,
     log: &'a Logger,
 }
-
+#[cfg(feature = "SYNC")]
 impl<F> ChangeTracker<'_, F>
 where
     F: FnMut(usize) -> bool,
@@ -242,7 +248,7 @@ where
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "SYNC"))]
 mod test {
     use crate::err::Result;
     use crate::media::changetracker::ChangeTracker;

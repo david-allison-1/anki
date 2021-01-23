@@ -33,14 +33,15 @@ use crate::{
     sched::cutoff::local_minutes_west_for_stamp,
     sched::timespan::{answer_button_time, learning_congrats, studied_today, time_span},
     search::SortMode,
-    sync::{
-        get_remote_sync_meta, sync_abort, sync_login, FullSyncProgress, NormalSyncProgress,
-        SyncActionRequired, SyncAuth, SyncMeta, SyncOutput, SyncStage,
-    },
     template::RenderedNode,
     text::{extract_av_tags, strip_av_tags, AVTag},
     timestamp::TimestampSecs,
     types::Usn,
+};
+#[cfg(feature = "SYNC")]
+use crate::sync::{
+get_remote_sync_meta, sync_abort, sync_login, FullSyncProgress, NormalSyncProgress,
+SyncActionRequired, SyncAuth, SyncMeta, SyncOutput, SyncStage,
 };
 use fluent::FluentValue;
 use futures::future::{AbortHandle, AbortRegistration, Abortable};
@@ -100,19 +101,19 @@ pub struct Backend {
 }
 
 // fixme: move other items like runtime into here as well
-
 #[derive(Default)]
 struct BackendState {
+    #[cfg(feature = "SYNC")]
     remote_sync_status: RemoteSyncStatus,
     media_sync_abort: Option<AbortHandle>,
 }
-
+#[cfg(feature = "SYNC")]
 #[derive(Default, Debug)]
 pub(crate) struct RemoteSyncStatus {
     last_check: TimestampSecs,
     last_response: sync_status_out::Required,
 }
-
+#[cfg(feature = "SYNC")]
 impl RemoteSyncStatus {
     fn update(&mut self, required: sync_status_out::Required) {
         self.last_check = TimestampSecs::now();
@@ -122,9 +123,12 @@ impl RemoteSyncStatus {
 
 #[derive(Clone, Copy)]
 enum Progress {
+    #[cfg(feature = "SYNC")]
     MediaSync(MediaSyncProgress),
     MediaCheck(u32),
+    #[cfg(feature = "SYNC")]
     FullSync(FullSyncProgress),
+    #[cfg(feature = "SYNC")]
     NormalSync(NormalSyncProgress),
     DatabaseCheck(DatabaseCheckProgress),
 }
@@ -1053,7 +1057,9 @@ impl BackendService for Backend {
     }
 
     fn close_collection(&self, input: pb::CloseCollectionIn) -> BackendResult<Empty> {
-        self.abort_media_sync_and_wait();
+        if cfg!(feature = "SYNC") {
+            self.abort_media_sync_and_wait();
+        }
 
         let mut col = self.col.lock().unwrap();
         if col.is_none() {
@@ -1073,41 +1079,42 @@ impl BackendService for Backend {
 
     // sync
     //-------------------------------------------------------------------
-
+    #[cfg(feature = "SYNC")]
     fn sync_login(&self, input: pb::SyncLoginIn) -> BackendResult<pb::SyncAuth> {
         self.sync_login_inner(input)
     }
-
+    #[cfg(feature = "SYNC")]
     fn sync_status(&self, input: pb::SyncAuth) -> BackendResult<pb::SyncStatusOut> {
         self.sync_status_inner(input)
     }
-
+    #[cfg(feature = "SYNC")]
     fn sync_collection(&self, input: pb::SyncAuth) -> BackendResult<pb::SyncCollectionOut> {
         self.sync_collection_inner(input)
     }
-
+    #[cfg(feature = "SYNC")]
     fn full_upload(&self, input: pb::SyncAuth) -> BackendResult<Empty> {
         self.full_sync_inner(input, true)?;
         Ok(().into())
     }
-
+    #[cfg(feature = "SYNC")]
     fn full_download(&self, input: pb::SyncAuth) -> BackendResult<Empty> {
         self.full_sync_inner(input, false)?;
         Ok(().into())
     }
-
+    #[cfg(feature = "SYNC")]
     fn sync_media(&self, input: pb::SyncAuth) -> BackendResult<Empty> {
         self.sync_media_inner(input).map(Into::into)
     }
-
+    #[cfg(feature = "SYNC")]
     fn abort_sync(&self, _input: Empty) -> BackendResult<Empty> {
-        if let Some(handle) = self.sync_abort.lock().unwrap().take() {
+        if let Some(handle) = self.sync_abort.take() {
             handle.abort();
         }
         Ok(().into())
     }
 
     /// Abort the media sync. Does not wait for completion.
+    #[cfg(feature = "SYNC")]
     fn abort_media_sync(&self, _input: Empty) -> BackendResult<Empty> {
         let guard = self.state.lock().unwrap();
         if let Some(handle) = &guard.media_sync_abort {
@@ -1343,7 +1350,8 @@ impl Backend {
         Ok((guard, abort_reg))
     }
 
-    fn sync_media_inner(&self, input: pb::SyncAuth) -> Result<()> {
+    #[cfg(feature = "SYNC")]
+    fn sync_media_inner(&mut input: pb::SyncAuth) -> Result<()> {
         // mark media sync as active
         let (abort_handle, abort_reg) = AbortHandle::new_pair();
         {
@@ -1387,7 +1395,13 @@ impl Backend {
         }
     }
 
+    #[cfg(not(feature = "SYNC"))]
+    fn abort_media_sync_and_wait(&self) {
+
+    }
+
     /// Abort the media sync. Won't return until aborted.
+    #[cfg(feature = "SYNC")]
     fn abort_media_sync_and_wait(&self) {
         let guard = self.state.lock().unwrap();
         if let Some(handle) = &guard.media_sync_abort {
@@ -1403,6 +1417,7 @@ impl Backend {
         }
     }
 
+    #[cfg(feature = "SYNC")]
     fn sync_login_inner(&self, input: pb::SyncLoginIn) -> BackendResult<pb::SyncAuth> {
         let (_guard, abort_reg) = self.sync_abort_handle()?;
 
@@ -1419,6 +1434,7 @@ impl Backend {
         })
     }
 
+    #[cfg(feature = "SYNC")]
     fn sync_status_inner(&self, input: pb::SyncAuth) -> BackendResult<pb::SyncStatusOut> {
         // any local changes mean we can skip the network round-trip
         let req = self.with_col(|col| col.get_local_sync_status())?;
@@ -1448,6 +1464,7 @@ impl Backend {
         Ok(response.into())
     }
 
+    #[cfg(feature = "SYNC")]
     fn sync_collection_inner(&self, input: pb::SyncAuth) -> BackendResult<pb::SyncCollectionOut> {
         let (_guard, abort_reg) = self.sync_abort_handle()?;
 
@@ -1487,6 +1504,7 @@ impl Backend {
         Ok(output.into())
     }
 
+    #[cfg(feature = "SYNC")]
     fn full_sync_inner(&self, input: pb::SyncAuth, upload: bool) -> Result<()> {
         self.abort_media_sync_and_wait();
 
@@ -1611,15 +1629,18 @@ impl From<RenderCardOutput> for pb::RenderCardOut {
 fn progress_to_proto(progress: Option<Progress>, i18n: &I18n) -> pb::Progress {
     let progress = if let Some(progress) = progress {
         match progress {
+            #[cfg(feature = "SYNC")]
             Progress::MediaSync(p) => pb::progress::Value::MediaSync(media_sync_progress(p, i18n)),
             Progress::MediaCheck(n) => {
                 let s = i18n.trn(TR::MediaCheckChecked, tr_args!["count"=>n]);
                 pb::progress::Value::MediaCheck(s)
             }
+            #[cfg(feature = "SYNC")]
             Progress::FullSync(p) => pb::progress::Value::FullSync(pb::FullSyncProgress {
                 transferred: p.transferred_bytes as u32,
                 total: p.total_bytes as u32,
             }),
+            #[cfg(feature = "SYNC")]
             Progress::NormalSync(p) => {
                 let stage = match p.stage {
                     SyncStage::Connecting => i18n.tr(TR::SyncSyncing),
@@ -1769,7 +1790,7 @@ impl From<crate::sched::cutoff::SchedTimingToday> for pb::SchedTimingTodayOut {
         }
     }
 }
-
+#[cfg(feature = "SYNC")]
 impl From<SyncOutput> for pb::SyncCollectionOut {
     fn from(o: SyncOutput) -> Self {
         pb::SyncCollectionOut {
@@ -1799,6 +1820,7 @@ impl From<SyncOutput> for pb::SyncCollectionOut {
     }
 }
 
+#[cfg(feature = "SYNC")]
 impl From<pb::SyncAuth> for SyncAuth {
     fn from(a: pb::SyncAuth) -> Self {
         SyncAuth {
@@ -1807,19 +1829,19 @@ impl From<pb::SyncAuth> for SyncAuth {
         }
     }
 }
-
+#[cfg(feature = "SYNC")]
 impl From<FullSyncProgress> for Progress {
     fn from(p: FullSyncProgress) -> Self {
         Progress::FullSync(p)
     }
 }
-
+#[cfg(feature = "SYNC")]
 impl From<MediaSyncProgress> for Progress {
     fn from(p: MediaSyncProgress) -> Self {
         Progress::MediaSync(p)
     }
 }
-
+#[cfg(feature = "SYNC")]
 impl From<NormalSyncProgress> for Progress {
     fn from(p: NormalSyncProgress) -> Self {
         Progress::NormalSync(p)
