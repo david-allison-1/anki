@@ -202,12 +202,13 @@ fn main() -> std::io::Result<()> {
 
     // output protobuf generated code
     println!("cargo:rerun-if-changed=../proto/backend.proto");
+    println!("cargo:rerun-if-changed=../proto/sqlite.proto");
     let mut config = prost_build::Config::new();
     config
         // we avoid default OUT_DIR for now, as it breaks code completion
         .out_dir("src")
         .service_generator(service_generator())
-        .compile_protos(&["../proto/backend.proto"], &["../proto"])
+        .compile_protos(&["../proto/backend.proto", "../proto/sqlite.proto"], &["../proto"])
         .unwrap();
     // rustfmt the protobuf code
     let rustfmt = Command::new("rustfmt")

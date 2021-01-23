@@ -59,6 +59,8 @@ use std::{
     sync::{Arc, Mutex},
 };
 use tokio::runtime::{self, Runtime};
+use crate::backend::dbproxy::{DBResult, db_command_proto};
+use crate::backend_proto::DbResult;
 
 pub mod dbproxy;
 
@@ -1572,6 +1574,19 @@ impl Backend {
 
     pub fn run_db_command_bytes(&self, input: &[u8]) -> std::result::Result<Vec<u8>, Vec<u8>> {
         self.db_command(input).map_err(|err| {
+            let backend_err = anki_error_to_proto_error(err, &self.i18n);
+            let mut bytes = Vec::new();
+            backend_err.encode(&mut bytes).unwrap();
+            bytes
+        })
+    }
+
+    pub fn db_command_proto(&self, input: &[u8]) -> Result<DbResult> {
+        self.with_col(|col| db_command_proto(&col.storage, input))
+    }
+
+    pub fn run_db_command_proto(&self, input: &[u8]) -> std::result::Result<DbResult, Vec<u8>> {
+        self.db_command_proto(input).map_err(|err| {
             let backend_err = anki_error_to_proto_error(err, &self.i18n);
             let mut bytes = Vec::new();
             backend_err.encode(&mut bytes).unwrap();
