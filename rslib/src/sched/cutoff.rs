@@ -160,7 +160,7 @@ fn sched_timing_today_v2_legacy(
 // ----------------------------------
 
 /// Based on provided input, get timing info from the relevant function.
-pub(crate) fn sched_timing_today(
+pub fn sched_timing_today(
     created_secs: TimestampSecs,
     now_secs: TimestampSecs,
     created_mins_west: Option<i32>,
