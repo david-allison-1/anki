@@ -68,7 +68,7 @@ pub enum AnkiError {
 
 // error helpers
 impl AnkiError {
-    pub(crate) fn invalid_input<S: Into<String>>(s: S) -> AnkiError {
+    pub fn invalid_input<S: Into<String>>(s: S) -> AnkiError {
         AnkiError::InvalidInput { info: s.into() }
     }
     #[cfg(feature = "SYNC")]
