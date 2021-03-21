@@ -210,12 +210,18 @@ fn main() -> std::io::Result<()> {
         .service_generator(service_generator())
         .compile_protos(&["../proto/backend.proto", "../proto/sqlite.proto"], &["../proto"])
         .unwrap();
-    // rustfmt the protobuf code
-    let rustfmt = Command::new("rustfmt")
-        .arg(Path::new("src/backend_proto.rs"))
-        .status()
-        .unwrap();
-    assert!(rustfmt.success(), "rustfmt backend_proto.rs failed");
+
+    // if DONT_RUSTFMT is not present, then perform rustfmt
+    if let Err(e) = std::env::var("DONT_RUSTFMT")  {
+        assert_eq!(e, std::env::VarError::NotPresent);
+        println!("Using rustfmt to format src/backend_proto.rs");
+        // rustfmt the protobuf code
+        let rustfmt = Command::new("rustfmt")
+            .arg(Path::new("src/backend_proto.rs"))
+            .status()
+            .unwrap();
+        assert!(rustfmt.success(), "rustfmt backend_proto.rs failed");
+    }
 
     // write the other language ftl files
     let mut ftl_lang_dirs = vec!["./ftl/anki-core-i18n/core".to_string()];
