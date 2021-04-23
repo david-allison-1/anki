@@ -99,7 +99,7 @@ impl Collection {
         res
     }
 
-    pub(crate) fn close(self, downgrade: bool) -> Result<()> {
+    pub fn close(self, downgrade: bool) -> Result<()> {
         self.storage.close(downgrade)
     }
 
